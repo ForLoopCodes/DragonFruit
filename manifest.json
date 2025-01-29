@@ -1,0 +1,29 @@
+{
+  "manifest_version": 3,
+  "name": "DragonFruit",
+  "version": "1.0",
+  "description": "Your Reply Guy IDEALIZER.",
+  "action": {
+    "default_popup": "popup.html"
+  },
+
+  "permissions": ["scripting", "tabs", "activeTab"],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'none'"
+  },
+  "icons": {
+    "16": "dragonfruit.png",
+    "48": "dragonfruit.png",
+    "128": "dragonfruit.png"
+  }
+}
