@@ -1,3 +1,3 @@
 chrome.runtime.onInstalled.addListener(() => {
-  console.log("skibidi");
+  console.log("DragonFruit.");
 });
