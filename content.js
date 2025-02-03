@@ -321,70 +321,9 @@ transition: all 0.3s ease-in-out;
 `;
 
 document.head.appendChild(style);
-
-const config = async () => {
-    const providers = {
-        mistral: {
-            defaultEndpoint: "https://api.mistral.ai/v1/chat/completions",
-            defaultModel: "mistral-large-latest",
-            storageKeyPrefix: "mistral"
-        },
-        ollama: {
-            defaultEndpoint: "https://localhost/v1/chat/completions",
-            defaultModel: "mixtral:8x7b", 
-            storageKeyPrefix: "ollama"
-        }
-    };
-
-    const loadProviderConfig = (providerName) => {
-        const config = providers[providerName];
-        return {
-            apiEndpoint: localStorage.getItem(`${config.storageKeyPrefix}_endpoint`) || config.defaultEndpoint,
-            apiKey: localStorage.getItem(`${config.storageKeyPrefix}_api_key`),
-            model: localStorage.getItem(`${config.storageKeyPrefix}_model`) || config.defaultModel
-        };
-    };
-
-    const saveProviderConfig = (providerName, { apiEndpoint, apiKey, model }) => {
-        const config = providers[providerName];
-        localStorage.setItem(`${config.storageKeyPrefix}_endpoint`, apiEndpoint);
-        localStorage.setItem(`${config.storageKeyPrefix}_api_key`, apiKey);
-        localStorage.setItem(`${config.storageKeyPrefix}_model`, model);
-    };
-
-    const initializeConfigUI = () => {
-        const providerSelect = document.getElementById('provider-select');
-        const endpointInput = document.getElementById('endpoint-input');
-        const apiKeyInput = document.getElementById('api-key-input');
-        const modelInput = document.getElementById('model-input');
-        const saveButton = document.getElementById('save-config');
-
-        providerSelect.addEventListener('change', (e) => {
-            const selectedProvider = e.target.value;
-            const config = loadProviderConfig(selectedProvider);
-            
-            endpointInput.value = config.apiEndpoint;
-            apiKeyInput.value = config.apiKey || '';
-            modelInput.value = config.model;
-        });
-
-        saveButton.addEventListener('click', () => {
-            const selectedProvider = providerSelect.value;
-            saveProviderConfig(selectedProvider, {
-                apiEndpoint: endpointInput.value,
-                apiKey: apiKeyInput.value,
-                model: modelInput.value
-            });
-            alert('Configuration saved successfully!');
-        });
-    };
-
-    // Optional: Return current configuration
-    return {
-        mistral: loadProviderConfig('mistral'),
-        ollama: loadProviderConfig('ollama'),
-        initializeConfigUI
-    };
+const config = {
+  mistralAPIKey: localStorage.getItem("mistral_api_key"),
+  apiEndpoint: "https://api.mistral.ai/v1/chat/completions",
 };
 
 const popup = document.createElement("div");
@@ -441,71 +380,134 @@ slider.addEventListener("input", (e) => {
   sliderValue.textContent = `${e.target.value}%`;
 });
 
-async function generateSystemPrompt(brainrot) {
-    const brainrotIntensity = parseInt(brainrot) || 50;
-    const prompts = [
-        brainrotIntensity >= 0 && "DO NOT use hashtags, AVOID USING EMOJIS, NEVER USE exclaimation marks",
-        brainrotIntensity >= 0 && "act more humane",
-        brainrotIntensity >= 0 && "do not exceed the character limit of 100 characters, dont use one word sentences, instead merge them or avoid using punctuations",
-        brainrotIntensity >= 20 && "reply controversial bangers",
-        brainrotIntensity >= 40 && "act like a cute cat reply guy :3 uwu",
-        brainrotIntensity >= 40 && "be concise and on the the point, share educational reply if possible",
-        brainrotIntensity >= 40 && "according to my experience in this field, in my opinion...",
-brainrotIntensity >= 40 && "YOU HAVE TO MAKE IT AS CONTROVERSIAL AS POSSIBLE, DISAGREE WITH THE PROMPT IF it is POSSIBLE, else answer it in a way that is not expected",
-        brainrotIntensity >= 60 && "if its a question, answer it in a way that is not expected, controversially",
-        brainrotIntensity >= 60 && "for motivational prompts, use words like: you got this, keep going, you can do it, etc",
-        brainrotIntensity >= 80 && `use words like imo or tbh or legit or lfg or gotta or umm or damn or omfg or oomf or lol or slop or hype or ngmi or cooking or cooked or pussies or get real or touch grass or your mom or get a job, etc (dont exceed ${brainrotIntensity}% of the time)`,
-        brainrotIntensity >= 80 && `STAY CRAZY, FOOLISH, CONTROVERSIAL, AND savage, BANGERS BANGERS BANGERS (dont exceed ${brainrotIntensity}% of the time)`,
-        brainrotIntensity >= 80 && "USE AS MUCH LESS PUNCTUATION AS POSSIBLE, AVOID USING PUNCTUATION"
-    ].filter(Boolean).map(prompt => `- ${prompt}`).join('\n');
-    return prompts;
-}
+async function generateReply(prompt, userNeed, mood) {
+  const brainrotIntensity = parseInt(slider.value) || 50;
+  try {
+    const response = await fetch(config.apiEndpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${config.mistralAPIKey}`,
+      },
+      body: JSON.stringify({
+        model: "mistral-large-latest",
+        messages: [
+          {
+            role: "system",
+            content: `
+  - ${
+    brainrotIntensity >= 0
+      ? "DO NOT use hashtags, AVOID USING EMOJIS, NEVER USE exclaimation marks"
+      : ""
+  }
+  - ${brainrotIntensity >= 0 ? "act more humane" : ""}
+  - ${
+    brainrotIntensity >= 0
+      ? "do not exceed the character limit of 100 characters, dont use one word sentences, instead merge them or avoid using punctuations"
+      : ""
+  }
+  - ${brainrotIntensity >= 20 ? "reply controvertial bangers" : ""}
+  - ${brainrotIntensity >= 40 ? "act like a cute cat reply guy :3 uwu" : ""}
+  - ${
+    brainrotIntensity >= 40
+      ? "be concise and on the the point, share educational reply if possible"
+      : ""
+  }
+  - ${
+    brainrotIntensity >= 40
+      ? "according to my experience in this field, in my opinion..."
+      : ""
+  }
+  - ${
+    brainrotIntensity >= 40
+      ? "YOU HAVE TO MAKE IT AS CONTROVERTIAL AS POSSIBLE, DISAGREE WITH THE PROMPT IF it is POSSIBLE, else answer it in a way that is not expected"
+      : ""
+  }
+  - ${
+    brainrotIntensity >= 60
+      ? "if its a question, answer it in a way that is not expected, controvertially"
+      : ""
+  }
+  - ${
+    brainrotIntensity >= 60
+      ? "for motivaitonal prompts, use words like: you got this, keep going, you can do it, etc"
+      : ""
+  }
+  - ${
+    brainrotIntensity >= 80
+      ? "use words like imo or tbh or legit or lfg or gotta or umm or damn or omfg or oomf or lol or slop or hype or ngmi or cooking or cooked or pussies or get real or touch grass or your mom or get a job, etc (dont exceed ${brainrotIntensity}% of the time)"
+      : ""
+  }
+  - ${
+    brainrotIntensity >= 80
+      ? "STAY CRAZY, FOOLISH, CONTROVERTIAL, AND savage, BANGERS BANGERS BANGERS (dont exceed ${brainrotIntensity}% of the time)"
+      : ""
+  }
+  - ${
+    brainrotIntensity >= 80
+      ? "USE AS MUCH LESS PUNCTUATIONS AS POSSIBLE, AVOID USING PUNCTUATIONS"
+      : ""
+  }
+`,
+          },
+          {
+            role: "user",
+            content: `
+            do not exceed the character limit of 100 characters, you are a cracked reply guy
+            ${userNeed && "User's need: " + userNeed}
+             ${mood == "Auto" ? "" : "YOU MUST REPLY WITH THIS MOOD:" + mood}
+            Generate reply: ${prompt}`,
+          },
+        ],
+      }),
+    });
 
-async function generateUserPrompt(prompt, userNeed, mood) {
-    const promptLines = [
-        "do not exceed the character limit of 100 characters, you are a cracked reply guy",
-        userNeed ? `User's need: ${userNeed}` : null,
-        mood !== "Auto" ? `YOU MUST REPLY WITH THIS MOOD: ${mood}` : null,
-        `Generate reply: ${prompt}`
-    ];
-    return promptLines.filter(Boolean).join('\n');
-}
+    // try {
+    //
+    //   const response = await fetch(config.apiEndpoint, {
+    //     method: "POST",
+    //     headers: {
+    //       "Content-Type": "application/json",
+    //       Authorization: `Bearer ${config.mistralAPIKey}`,
+    //     },
+    //     body: JSON.stringify({
+    //       model: "mistral-large-latest",
+    //       messages: [
+    //         {
+    //           role: "system",
+    //           content: `
+    //           - DO NOT use hashtags, AVOID USING EMOJIS, NEVER USE exclaimation marks
+    //           - act more humane
+    //           - act like a cute cat reply guy :3 uwu
+    //           - reply controvertial bangers
+    //           - be concise and on the the point, share educational reply if possible
+    //           - use words like according to my experience in this field... or similar words, share your opinion like: in my opinion...
+    //           - YOU HAVE TO MAKE IT AS CONTROVERTIAL AS POSSIBLE, DISAGREE WITH THE PROMPT IF it is POSSIBLE, else answer it in a way that is not expected
+    //           - if it is a question, answer it in a way that is not expected, controvertially
+    //           - do not exceed the character limit of 100 characters, dont use one word sentences, instead merge them or avoid using punctuations
+    //           - for motivaitonal prompts, use words like: you got this, keep going, you can do it, etc
+    //           - use words like imo or tbh or legit or lfg or gotta or umm or damn or omfg or oomf or lol or slop or hype or etc (dont exceed 10%) (dont exceed 10%) (dont exceed 10%) (dont exceed 10%)
+    //           - STAY CRAZY, FOOLISH, CONTROVERTIAL, AND savage, BANGERS BANGERS BANGERS (dont exceed 10%)
+    //           - USE AS MUCH LESS PUNCTUATIONS AS POSSIBLE, AVOID USING PUNCTUATIONS
+    //           `,
+    //         },
+    //         {
+    //           role: "user",
+    //           content: `
+    //           Generate a concise twitter reply for this post: ${prompt}
+    //           `,
+    //         },
+    //       ],
+    //     }),
+    //   });
 
-async function generateReply(apiConfig, prompt, brainrot, userNeed, mood) { 
-    try {
-        const { apiEndpoint, apiKey, model } = apiConfig;
-        const response = await fetch(apiEndpoint, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${apiKey}`, 
-            },
-            body: JSON.stringify({
-                model: model,
-                messages: [
-                    {
-                        role: "system",
-                        content: await generateSystemPrompt(brainrot),
-                    },
-                    {
-                        role: "user",
-                        content: await generateUserPrompt(prompt, userNeed, mood),
-                    },
-                ],
-            }),
-        });
-        const data = await response.json();
-        if (apiConfig.model === 'mistral-large-dataset') { 
-            return data.choices[0]?.message?.content || "Could not generate a reply";
-        } else {
-            return data.message.content || "Could not generate a reply";
-        }
-    } catch (error) {
-        console.error("API Error:", error);
-        return "Could not generate a reply";
-    }
+    const data = await response.json();
+    return data.choices[0]?.message?.content || "Could not generate reply";
+  } catch (error) {
+    console.error("API Error:", error);
+    return "Error generating reply";
+  }
 }
-
 
 function extractViewCount(ariaLabel) {
   const parts = ariaLabel.split(",").map((p) => p.trim());
