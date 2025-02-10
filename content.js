@@ -683,21 +683,42 @@ function setupButtonInteraction(element, button, metricsElement, tweetLink) {
       navigator.clipboard.writeText(reply);
     };
 
+    //const tweetId = tweetLink.href.split("/status/")[1].split("/")[0];
+    //popup.querySelector(".go-to-tweet-button").addEventListener("click", () => {
+    //  if (activeArticle) {
+    //    const replyText = encodeURIComponent(
+    //      popup.querySelector(".reply-idea-body").textContent
+    //    );
+    //    const replyUrl = `https://x.com/intent/post?in_reply_to=${tweetId}&text=${replyText}`;
+    //    window.open(replyUrl, "_blank");
+    //  }
+    //});
     const tweetId = tweetLink.href.split("/status/")[1].split("/")[0];
-    popup.querySelector(".go-to-tweet-button").addEventListener("click", () => {
-      if (activeArticle) {
-        const replyText = encodeURIComponent(
-          popup.querySelector(".reply-idea-body").textContent
-        );
-        const replyUrl = `https://x.com/intent/post?in_reply_to=${tweetId}&text=${replyText}`;
-        window.open(replyUrl, "_blank");
+    const replyThisButon = popup.querySelector(".go-to-tweet-button");
+    replyThisButon.disabled = false;
+    replyThisButon.onclick = async () => {
+      try {
+        if (activeArticle) {
+          const replyText = encodeURIComponent(
+            popup.querySelector(".reply-idea-body").textContent
+          );
+          const replyUrl = `https://x.com/intent/post?in_reply_to=${tweetId}&text=${replyText}`;
+          window.open(replyUrl, "_blank");
+        }
+        replyThisButon.disabled = true;
+        setTimeout(() => {
+          replyThisButon.disabled = false;
+        }, 3000);
+      } catch (error) {
+        console.log(error);
       }
-    });
+    };
+
     const copyButton = popup.querySelector(".copy-button");
     copyButton.disabled = false;
     copyButton.onclick = async () => {
       try {
-        await navigator.clipboard.writeText(reply);
+        await navigator.clipboard.writeText(popupBody.textContent);
         copyButton.textContent = "Copied!";
         copyButton.classList.add("copy-success");
         copyButton.disabled = true;

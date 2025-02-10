@@ -28,6 +28,7 @@
         margin: 0;
         min-width: 300px;
         min-height: 150px;
+        animation: 0.3s animate ease-in-out;
       }
 
       .config-content {
@@ -101,6 +102,17 @@
       .config-header img {
         width: 100px;
         height: 100px;
+      }
+
+      @keyframes animate {
+        0% {
+          opacity: 0;
+          backdrop-filter: blur(0px);
+        }
+        100% {
+          opacity: 0;
+          backdrop-filter: blur(15px);
+        }
       }
     </style>
   </head>
